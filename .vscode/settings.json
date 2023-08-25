@@ -1,0 +1,13 @@
+{
+    "editor.wordWrapColumn": 120,
+    "dart.lineLength": 120,
+    "[dart]": {
+        "editor.rulers": [
+            120
+        ],
+    },
+    "editor.suggestSelection": "first",
+    "editor.autoClosingQuotes": "never",
+    "debug.console.wordWrap": false,
+    "files.trimTrailingWhitespace": true,
+}
