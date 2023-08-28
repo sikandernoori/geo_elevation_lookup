@@ -17,6 +17,9 @@ void main() {
     String elevationAtK2 = 'Test elevation at K-2';
     String smallestDatasetFile = 'Test Smallest dataset file';
     String cacheSize = 'Test cache size';
+    String negativeCoords = 'Test Negative coords';
+    String nagativeLatitude = 'Test Nagative latitude coords';
+    String nagativeLongitude = 'Test Nagative latitude coords';
 
     test(oplhTest, () async {
       sw.reset();
@@ -31,14 +34,14 @@ void main() {
 
       var elevation = await geoElevationLookup.getElevation(31.522994, 74.404607);
       expect(elevation, 208);
-      print('$oplaTest took ${sw.elapsedMilliseconds} ms');
+      print('$oplaTest took ${sw.elapsedMicroseconds} ms');
     });
 
     test(elevationAtSea, () async {
       sw.reset();
 
-      var elevation = await geoElevationLookup.getElevation(29.750562, -43.415430);
-      expect(elevation, 0);
+      var elevation = await geoElevationLookup.getElevation(0, 0);
+      expect(elevation, -32768);
       print('$elevationAtSea took ${sw.elapsedMilliseconds} ms');
     });
 
@@ -58,9 +61,33 @@ void main() {
       print('$smallestDatasetFile took ${sw.elapsedMilliseconds} ms');
     });
 
+    test(negativeCoords, () async {
+      sw.reset();
+
+      var elevation = await geoElevationLookup.getElevation(-23.571332, -66.275315);
+      expect(elevation, 4253);
+      print('$negativeCoords took ${sw.elapsedMilliseconds} ms');
+    });
+
+    test(nagativeLatitude, () async {
+      sw.reset();
+
+      var elevation = await geoElevationLookup.getElevation(-17.855005, 124.640616);
+      expect(elevation, 128);
+      print('$nagativeLatitude took ${sw.elapsedMilliseconds} ms');
+    });
+
+    test(nagativeLongitude, () async {
+      sw.reset();
+
+      var elevation = await geoElevationLookup.getElevation(42.064268, -6.580082);
+      expect(elevation, 1022);
+      print('$nagativeLongitude took ${sw.elapsedMilliseconds} ms');
+    });
+
     test(cacheSize, () {
       sw.reset();
-      expect(geoElevationLookup.tiffImageCache.cacheSize, 3);
+      expect(geoElevationLookup.tiffImageCache.cacheSize, 7);
       print('$smallestDatasetFile took ${sw.elapsedMilliseconds} ms');
     });
   });
