@@ -9,6 +9,7 @@ class GeoUtils {
     return (rowsPerDegree * (90 - latitude)).toInt();
   }
 
+  // TODO: find a meaningfull name
   static int roundToPrevious10th(int value) {
     if (value >= 0) {
       return (value ~/ 10) * 10;
@@ -17,6 +18,7 @@ class GeoUtils {
     }
   }
 
+  // TODO: find a meaningfull name
   static int roundToPrevious5th(int value) {
     if (value >= 0) {
       return (value ~/ 5) * 5;
@@ -25,6 +27,7 @@ class GeoUtils {
     }
   }
 
+  // TODO: find a meaningfull name
   static int roundToNext5th(double value) {
     if (value >= 0) {
       return ((value + 4).ceil() ~/ 5) * 5;
