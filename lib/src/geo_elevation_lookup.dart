@@ -1,5 +1,6 @@
+import 'dart:io';
+
 import 'package:geo_elevation_lookup/src/cache/tiff_image_cache.dart';
-import 'package:geo_elevation_lookup/src/utils/dem_utils.dart';
 import 'package:geo_elevation_lookup/src/utils/geo_utils.dart';
 import 'package:image/image.dart';
 
@@ -53,9 +54,9 @@ class GeoElevationLookup {
   /// using data from the USGS EROS GTOPO30 DEM.
   ///
   /// If the elevation data is not available, 0 is returned.
-  int getElevation(double latitude, double longitude) {
+  Future<int> getElevation(double latitude, double longitude) async {
     try {
-      if (!DEMUtils.checkDEMFolderExist(_demsPath)) throw 'DEM not found at path: $_demsPath';
+      if (!(await Directory(_demsPath).exists())) throw 'DEM not found at path: $_demsPath';
 
       var colAbsolute = GeoUtils.longitudeToColumn(longitude);
       var rowAbsolute = GeoUtils.latitudeToRow(latitude);
@@ -67,8 +68,9 @@ class GeoElevationLookup {
       var index = ((GeoUtils.roundToPrevious10th(longitude.floor()) + (width / 2)) / dLon).floor() +
           (((GeoUtils.roundToPrevious5th(latitude.floor()) + (height / 2)) / dLat) * (height / dLat)).floor();
 
-      if (DEMUtils.checkDEMFileExist(_demsPath, index)) {
-        var image = (tiffImageCache.get(index) as Image?) ?? DEMUtils.getDEM('$_demsPath/$index.tiff');
+      if (await File('$_demsPath/$index.tiff').exists()) {
+        var image = (tiffImageCache.get(index) as Image?) ??
+            TiffDecoder().decode(await File('$_demsPath/$index.tiff').readAsBytes());
 
         if (image == null) {
           throw 'Unable to parse file to image';

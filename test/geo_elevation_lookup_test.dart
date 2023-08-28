@@ -18,42 +18,42 @@ void main() {
     String smallestDatasetFile = 'Test Smallest dataset file';
     String cacheSize = 'Test cache size';
 
-    test(oplhTest, () {
+    test(oplhTest, () async {
       sw.reset();
 
-      var elevation = geoElevationLookup.getElevation(31.496059, 74.345742);
+      var elevation = await geoElevationLookup.getElevation(31.496059, 74.345742);
       expect(elevation, 210);
       print('$oplhTest took ${sw.elapsedMilliseconds} ms');
     });
 
-    test(oplaTest, () {
+    test(oplaTest, () async {
       sw.reset();
 
-      var elevation = geoElevationLookup.getElevation(31.522994, 74.404607);
+      var elevation = await geoElevationLookup.getElevation(31.522994, 74.404607);
       expect(elevation, 208);
       print('$oplaTest took ${sw.elapsedMilliseconds} ms');
     });
 
-    test(elevationAtSea, () {
+    test(elevationAtSea, () async {
       sw.reset();
 
-      var elevation = geoElevationLookup.getElevation(29.750562, -43.415430);
+      var elevation = await geoElevationLookup.getElevation(29.750562, -43.415430);
       expect(elevation, 0);
       print('$elevationAtSea took ${sw.elapsedMilliseconds} ms');
     });
 
-    test(elevationAtK2, () {
+    test(elevationAtK2, () async {
       sw.reset();
 
-      var elevation = geoElevationLookup.getElevation(35.881866, 76.513240);
+      var elevation = await geoElevationLookup.getElevation(35.881866, 76.513240);
       expect(elevation, 8058);
       print('$elevationAtK2 took ${sw.elapsedMilliseconds} ms');
     });
 
-    test(smallestDatasetFile, () {
+    test(smallestDatasetFile, () async {
       sw.reset();
 
-      var elevation = geoElevationLookup.getElevation(75, 40);
+      var elevation = await geoElevationLookup.getElevation(75, 40);
       expect(elevation, -32768);
       print('$smallestDatasetFile took ${sw.elapsedMilliseconds} ms');
     });

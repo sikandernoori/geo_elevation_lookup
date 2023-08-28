@@ -107,7 +107,7 @@ class ExampleAppState extends State<ExampleApp> {
       geoElevationLookup ??= GeoElevationLookup(await getDEMsPath());
       final lat = double.parse(latitudeController.text);
       final lon = double.parse(longitudeController.text);
-      final elevation = geoElevationLookup?.getElevation(lat, lon);
+      final elevation = await geoElevationLookup?.getElevation(lat, lon);
       setState(() => elevationController.text = elevation.toString());
     } catch (e) {
       showMessage(e.toString());
