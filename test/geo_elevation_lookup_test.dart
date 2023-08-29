@@ -121,12 +121,8 @@ void main() {
 
     Future<String> executeCommand(double lat, double long) async {
       String command = 'gdallocationinfo';
-      List<String> arguments = [
-        '-geoloc',
-        '/Users/skandar/Desktop/random-forest/elevation_project/GTOPO_30/GTOPO30.tif',
-        long.toString(),
-        lat.toString()
-      ];
+      // replace `pathToGTOPO30File` with your loca GTOPO30 file path
+      List<String> arguments = ['-geoloc', pathToGTOPO30File, long.toString(), lat.toString()];
       ProcessResult result = await Process.run(command, arguments);
       if (result.exitCode == 0) {
         return result.stdout.toString();
