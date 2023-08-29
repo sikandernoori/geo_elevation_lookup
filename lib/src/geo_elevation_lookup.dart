@@ -16,17 +16,20 @@ class GeoElevationLookup {
   /// ```
   final String _demsPath;
 
-  /// Longitudinal sepration for each rectangler taken from [GTOPO30].
-  static const int dLon = 4;
+  /// size of each pixel.
+  static const double pixelSize = 0.008333333767951;
 
-  /// Latitudinal sepration for each rectangler taken from [GTOPO30].
-  static const int dLat = 2;
+  /// starting point of longitude
+  static const double originX = -180.000001017469913;
 
-  /// Height of [GTOPO30] tiff file.
-  static const int height = 180;
+  /// starting point of latitude
+  static const double originY = 90.000008840579540;
 
-  /// Width of [GTOPO30] tiff file.
-  static const int width = 360;
+  /// Width of Tiff
+  static const int imageWidth = 480;
+
+  /// Height of Tiff
+  static const int imageHeight = 240;
 
   /// Cached tiff images
   TiffImageCache tiffImageCache;
@@ -57,49 +60,53 @@ class GeoElevationLookup {
   /// If the elevation data is not available, 0 is returned.
   Future<int> getElevation(double latitude, double longitude) async {
     try {
-      var colAbsolute = longitudeToColumn(longitude);
-      var rowAbsolute = latitudeToRow(latitude);
-      var minLong = roundToPrevious4th(longitude.floor()).toDouble();
-      var colOffset = longitudeToColumn(minLong);
-      var maxLat = roundToNext2nd(latitude).toDouble();
-      var rowOffset = latitudeToRow(maxLat);
+      List<int> pixelCoords = latLongToXY(longitude, latitude);
 
-      var index = ((roundToPrevious4th(longitude.floor()) + (width / 2)) / dLon).floor() +
-          (((roundToPrevious2nd(latitude.floor()) + (height / 2)) / dLat) * (height / dLat)).floor();
+      var xAbsolute = pixelCoords[0];
+      var yAbsolute = pixelCoords[1];
 
-      if (await File('$_demsPath/$index.tiff').exists()) {
-        var tiffFile = await File('$_demsPath/$index.tiff').readAsBytes();
-        var image = (tiffImageCache.get(index) as Image?) ?? TiffDecoder().decode(tiffFile);
+      var tiffStartX = getTiffStartX(xAbsolute);
+      var tiffStartY = getTiffStartY(yAbsolute).abs();
+
+      var tiffEndX = tiffStartX + imageWidth;
+      var tiffEndY = tiffStartY + imageHeight;
+
+      var fileName = '${tiffStartX}_$tiffStartY';
+
+      var xBefore = xAbsolute.toInt() - tiffStartX;
+      var yBefore = yAbsolute.toInt() - tiffStartY;
+
+      int x, y = 0;
+
+      if ((xAbsolute.floor() - xBefore) + imageWidth == tiffEndX) {
+        x = xAbsolute.floor() - tiffStartX;
+      } else {
+        x = xAbsolute.ceil() - tiffStartX;
+      }
+
+      if ((yAbsolute.floor() - yBefore) + imageHeight == tiffEndY) {
+        y = yAbsolute.floor() - tiffStartY;
+      } else {
+        y = yAbsolute.ceil() - tiffStartY;
+      }
+
+      if (await File('$_demsPath/$fileName.tiff').exists()) {
+        var tiffFile = await File('$_demsPath/$fileName.tiff').readAsBytes();
+        var image = (tiffImageCache.get(fileName) as Image?) ?? TiffDecoder().decode(tiffFile);
         if (image == null) {
           throw 'Unable to parse file to image';
         } else if (image.data == null) {
-          throw 'Empty Image found at path: $_demsPath$index.tiff';
+          throw 'Empty Image found at path: $_demsPath$fileName.tiff';
         }
 
-        if (tiffImageCache.get(index) == null) {
-          tiffImageCache.put(index, image);
+        if (tiffImageCache.get(fileName) == null) {
+          tiffImageCache.put(fileName, image);
         }
 
-        double col = (colAbsolute - colOffset);
-        if (col < 21600) {
-          col = col.floor().toDouble();
-        } else {
-          col = col.round().toDouble();
-        }
+        var elevation = image.data!.getPixel(x, y).r.toInt();
+        if (elevation == -32768) return 0;
 
-        double row = (rowAbsolute - rowOffset).abs();
-        if (row < 10800) {
-          row = row.floor().toDouble();
-        } else {
-          row = row.round().toDouble();
-        }
-
-        var e1 = image.data!.getPixel(col.toInt(), row.toInt()).r.toInt();
-        if (e1 == -32768) {
-          e1 = 0;
-        }
-
-        return e1;
+        return elevation;
       }
 
       return 0;
@@ -108,40 +115,25 @@ class GeoElevationLookup {
     }
   }
 
-  static double longitudeToColumn(double longitude) {
-    const double columnsPerDegree = 43200 / 360.000019;
-    return (columnsPerDegree * (longitude + (360.000019 / 2)));
-  }
+  int getTiffStartX(int col) => (col ~/ imageWidth) * imageWidth;
 
-  static double latitudeToRow(double latitude) {
-    const double rowsPerDegree = 21600 / 180.00001;
-    return (rowsPerDegree * ((180.00001 / 2) - latitude));
-  }
+  int getTiffStartY(int row) => (row ~/ imageHeight) * imageHeight;
 
-  // TODO: find a meaningful name
-  static int roundToPrevious4th(int value) {
-    if (value >= 0) {
-      return (value ~/ dLon) * dLon;
-    } else {
-      return ((value - (dLon - 1)) ~/ dLon) * dLon;
-    }
-  }
+  int xToCol(double x) => (x - originX) ~/ pixelSize;
 
-  // TODO: find a meaningful name
-  static int roundToPrevious2nd(int value) {
-    if (value >= 0) {
-      return (value ~/ dLat) * dLat;
-    } else {
-      return ((value - (dLat - 1)) ~/ dLat) * dLat;
-    }
-  }
+  int yToRow(double y) => (y - originY) ~/ pixelSize;
 
-  // TODO: find a meaningful name
-  static int roundToNext2nd(double value) {
-    if (value >= 0) {
-      return ((value + (dLat - 1)).ceil() ~/ dLat) * dLat;
-    } else {
-      return (value ~/ dLat) * dLat;
-    }
+  List<int> latLongToXY(double longitude, double latitude) {
+    double adjustedLongitude = longitude - originX;
+    double adjustedLatitude = latitude - originY;
+
+    double x = originX + adjustedLongitude;
+
+    double y = originY + adjustedLatitude;
+
+    int col = xToCol(x);
+    int row = yToRow(y).abs();
+
+    return [col, row];
   }
 }

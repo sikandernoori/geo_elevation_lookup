@@ -36,3 +36,59 @@ void main() {
 }
 ```
 
+### Example App to generate tiffs
+
+```
+import 'dart:io';
+
+// ignore: constant_identifier_names
+const DEM_PATH = 'path/to/GTOPO30.tif';
+
+Future<bool> divideTiff(
+    String index, int x, int y, int width, int height) async {
+  final gdalCommand = [
+    '-co',
+    'compress=lzw',
+    '-of',
+    'GTiff',
+    '-srcwin',
+    x.toString(),
+    y.toString(),
+    width.toString(),
+    height.toString(), //  <xoff> <yoff> <xsize> <ysize>
+    DEM_PATH,
+    '$index.tiff',
+  ];
+
+  try {
+    final processResult = await Process.run('gdal_translate', gdalCommand,
+        workingDirectory: './lib/DEMs/');
+    if (processResult.exitCode == 0) {
+      // Successfully file created
+      return true;
+    } else {
+      final error = processResult.stderr;
+      print('Error: $error');
+      return false;
+    }
+  } catch (error) {
+    print('Error: $error');
+    return false;
+  }
+}
+
+Future<void> main() async {
+  Stopwatch sw1 = Stopwatch()..start();
+  int index = 0;
+
+  for (int x = 0; x < 43200; x = x + 480) {
+    for (int y = 0; y < 21600; y = y + 240) {
+      await divideTiff('${x}_$y', x, y, 480, 240);
+      index++;
+      print(index);
+    }
+  }
+  print('Total tiffs: $index');
+  print('Took: ${(sw1.elapsedMilliseconds / 1000) / 60} seconds');
+}
+```
