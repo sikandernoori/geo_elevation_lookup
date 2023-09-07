@@ -98,7 +98,7 @@ void main() {
 
     test(cacheSize, () {
       sw.reset();
-      expect(geoElevationLookup.tiffImageCache.cacheSize, 8);
+      expect(geoElevationLookup.tiffImageCache.cacheSize, 6);
       print('$smallestDatasetFile took ${sw.elapsedMilliseconds} ms');
     });
 

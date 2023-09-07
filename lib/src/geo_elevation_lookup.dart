@@ -32,7 +32,7 @@ class GeoElevationLookup {
   static const int imageHeight = 240;
 
   /// Cached tiff images
-  TiffImageCache tiffImageCache;
+  TiffImageCache<String, Image> tiffImageCache;
 
   /// Enable caching to avoid reloading image in single session for faster processing.
   ///
@@ -91,8 +91,8 @@ class GeoElevationLookup {
       }
 
       if (await File('$_demsPath/$fileName.tiff').exists()) {
-        var tiffFile = await File('$_demsPath/$fileName.tiff').readAsBytes();
-        var image = (tiffImageCache.get(fileName) as Image?) ?? TiffDecoder().decode(tiffFile);
+        var image =
+            tiffImageCache.get(fileName) ?? TiffDecoder().decode(await File('$_demsPath/$fileName.tiff').readAsBytes());
         if (image == null) {
           throw 'Unable to parse file to image';
         } else if (image.data == null) {
@@ -154,8 +154,8 @@ class GeoElevationLookup {
       }
 
       if (File('$_demsPath/$fileName.tiff').existsSync()) {
-        var tiffFile = File('$_demsPath/$fileName.tiff').readAsBytesSync();
-        var image = (tiffImageCache.get(fileName) as Image?) ?? TiffDecoder().decode(tiffFile);
+        var image =
+            tiffImageCache.get(fileName) ?? TiffDecoder().decode(File('$_demsPath/$fileName.tiff').readAsBytesSync());
         if (image == null) {
           throw 'Unable to parse file to image';
         } else if (image.data == null) {
